@@ -67,8 +67,14 @@ void TMCLOCK::tm_loop() {
   if (!bannerShowed) return;
   #endif
 
+
   if (getSetDelay()) { // пропускаем цикл вывода часов, давая возможность успеть увидеть инфу с другиг плагинов
     getSetDelay()--;
+    return;
+  }
+
+  if(ipShow) {      // Пропускаем все, если выводится IP
+    showIp();
     return;
   }
 
@@ -95,14 +101,26 @@ void TMCLOCK::showBanner(){
   if (l == 21) return;
   l++;   // Добавляем счетчик и ограничиваем, чтобы не гонял по кругу
   if (embui.sysData.wifi_sta && l <= 20 && l > 4) {
-    String ip = (String) "IP." + (String) WiFi.localIP().toString();
-    splitIp(ip, ".", splittedIp);
-    display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+    String ip = (String) F("IP.") + (String) WiFi.localIP().toString();
+    splitIp(ip, F("."), splittedIp);
+    display(formatIp(splittedIp, F("")))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
   }
-  else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) display("__AP_192_168___4___1")->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+  else if (!embui.sysData.wifi_sta && l <= 20 && l > 4) display(String(F("__AP_192_168___4___1")))->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
   if (l == 20) bannerShowed = 1;
 }
 #endif
+
+
+void TMCLOCK::showIp(){
+  if (embui.sysData.wifi_sta) {
+    String ip = (String)F("IP.") + (String) WiFi.localIP().toString();
+    splitIp(ip, F("."), splittedIp);
+    display(formatIp(splittedIp, ""))->scrollLeft(500, 4); // Запуск баннера (хоть и задержка указана 500, по факту она 1 сек), индекс 4 (выводит 4 цифры за раз)
+  }
+  else if (!embui.sysData.wifi_sta) display(String(F("__AP_192_168___4___1")))->scrollLeft(500, 4);  // Если нет подключения, то крутим айпи точки доступа
+  ipShow--;
+}
+
 
 // | FUNC - Split IP
 // |----------
@@ -124,8 +142,8 @@ void TMCLOCK::splitIp(String str, String dlm, String dest[])
 // |----------
 String TMCLOCK::formatIp(String inArr[], String dlm)
 {
-  String tmp    = "____";
-  String output = "";
+  String tmp    = F("____");
+  String output = F("");
 
   for(uint8_t i=0; i<5; i++){
     String crnt = inArr[i];
@@ -139,7 +157,7 @@ String TMCLOCK::formatIp(String inArr[], String dlm)
       output += dlm;
     }
 
-    tmp    = "____";
+    tmp    = F("____");
   }
 
   return output;

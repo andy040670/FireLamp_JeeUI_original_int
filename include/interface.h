@@ -12,6 +12,9 @@ typedef enum _remote_action {
     RA_ALARM_OFF,
     RA_LAMP_CONFIG,
     RA_EFF_CONFIG,
+#ifdef ESP_USE_BUTTON
+    RA_BUTTONS_CONFIG,
+#endif
     RA_EVENTS_CONFIG,
 #ifdef AUX_PIN
     RA_AUX_ON,
@@ -28,6 +31,12 @@ typedef enum _remote_action {
     RA_BRIGHT_NF,
     RA_CONTROL,
     RA_MIC,
+#ifdef MP3PLAYER
+    RA_MP3_PREV,
+    RA_MP3_NEXT,
+    RA_MP3_SOUND,
+    RA_PLAYERONOFF,
+#endif
 #ifdef MIC_EFFECTS
     RA_MICONOFF,
 #endif
@@ -41,7 +50,8 @@ typedef enum _remote_action {
     RA_GLOBAL_BRIGHT,
     RA_WARNING,
     RA_DRAW,
-    RA_FILLMATRIX
+    RA_FILLMATRIX,
+    RA_RGB
 } RA;
 
 void remote_action(RA action, ...);

@@ -47,20 +47,12 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 //#define SF(...) #__VA_ARGS__
 
 #include <GyverButton.h>
-// переместил в platformio.ini
-// #ifdef ESP8266
-// #define FASTLED_USE_PROGMEM             (1)
-// #endif
-#define FASTLED_INTERRUPT_RETRY_COUNT   (0)                 // default: 2; // Use this to determine how many times FastLED will attempt to re-transmit a frame if interrupted for too long by interrupts
-#define FASTLED_ESP8266_RAW_PIN_ORDER                       // FASTLED_ESP8266_RAW_PIN_ORDER, FASTLED_ESP8266_D1_PIN_ORDER or FASTLED_ESP8266_NODEMCU_PIN_ORDER
-//#define FASTLED_ALLOW_INTERRUPTS      (0)                   // default: 1; // Use this to force FastLED to allow interrupts in the clockless chipsets (or to force it to disallow), overriding the default on platforms that support this. Set the value to 1 to allow interrupts or 0 to disallow them.
 #include <FastLED.h>
 
 //-----------------------------------
 //#define ESP_USE_BUTTON                                      // если строка не закомментирована, должна быть подключена кнопка (иначе ESP может регистрировать "фантомные" нажатия и некорректно устанавливать яркость)
 //#define LAMP_DEBUG                                          // режим отладки, можно также включать в platformio.ini
 //#define DEBUG_TELNET_OUTPUT  (true)                         // true - отладочные сообщения будут выводиться в telnet вместо Serial порта (для удалённой отладки без подключения usb кабелем) // Deprecated
-//#define USE_FTP                                             // доступ к LittleFS по FTP, логин/пароль: esp8266
 //#define OTA                                                 // Обновление по ОТА
 //#define MIC_EFFECTS                                         // Включить использование микрофона для эффектов
 //#define MP3PLAYER                                           // Включить использование MP3 плеера (DF Player)
@@ -70,6 +62,43 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 //-----------------------------------
 #ifndef LANG_FILE
 #define LANG_FILE                  "text_res-RUS.h"           // Языковой файл по дефолту
+#endif
+
+#ifdef RTC
+  #ifndef RTC_MODULE
+  #define RTC_MODULE          (2U)                          // Поддерживаются модули DS1302 = (1U),  DS1307 = (2U), DS3231 = (3U)
+  #endif
+  #ifndef RTC_SYNC_PERIOD
+  #define RTC_SYNC_PERIOD     (24U)                         // Период синхронизации RTC c ntp (часы)
+  #endif
+  #if RTC_MODULE > (1U)                                     // Если выбран модуль с I2C (DS1307 или DS3231)
+    #ifdef TM1637_CLOCK                                     // Если есть дисплей TM1637, то можем использовать его пины для RTC (но RTC модуль работает не на всех пинах)
+      #ifndef pin_SW_SDA
+      #define pin_SW_SDA        (TM_CLK_PIN)                // Пин SDA RTC модуля подключаем к CLK пину дисплея
+      #endif
+      #ifndef pin_SW_SCL
+      #define pin_SW_SCL        (TM_DIO_PIN)                // Пин SCL RTC модуля подключаем к DIO пину дисплея
+      #endif
+    #else                                                   // Пины подбирать экспериментальным путем, точно работает на D2 и D4
+      #ifndef pin_SW_SDA
+      #define pin_SW_SDA        (D2)                        // Назначаем вывод для работы в качестве линии SDA программной шины I2C.
+      #endif
+      #ifndef pin_SW_SCL
+      #define pin_SW_SCL        (D4)                        // Назначаем вывод для работы в качестве линии SCL программной шины I2C.
+      #endif
+    #endif
+    #if RTC_MODULE == (1U)                                    // Если выбран модуль DS1302.
+      #ifndef pin_RST
+      #define pin_RST             (D8)                        // Назначаем вывод RST.
+      #endif
+      #ifndef pin_DAT
+      #define pin_DAT             (D3)                        // Назначаем вывод DAT.
+      #endif
+      #ifndef pin_DAT
+      #define pin_CLK             (D4)                        // Назначаем вывод CLK.
+      #endif
+    #endif
+  #endif
 #endif
 
 #ifndef MIC_PIN
@@ -178,7 +207,6 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 #define SEGMENTS              (1U)                          // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
 #endif
 
-//#define VERTGAUGE             (1U)                          // вертикальный/горизонтальный(1/0) индикатор, закомментировано - отключен
 #ifndef NUMHOLD_TIME
 #define NUMHOLD_TIME          (3000U)                       // время запоминания последней комбинации яркости/скорости/масштаба в мс
 #endif
@@ -244,9 +272,6 @@ typedef enum {NR_NONE,BIT_1,BIT_2,BIT_3,BIT_4} MIC_NOISE_REDUCE_LEVEL;
 
 
 // настройки времени
-//#ifndef TZONE
-//#define TZONE                 ("AUTO")
-//#endif
 #ifndef HTTPTIME_SYNC_INTERVAL
  #define HTTPTIME_SYNC_INTERVAL    (4)                           // интервал синхронизации времени по http, час
 #endif

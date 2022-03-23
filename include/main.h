@@ -43,10 +43,34 @@ JeeUI2 lib used under MIT License Copyright (c) 2019 Marsel Akhkamov
 #endif
 
 #include <Arduino.h>
-#include "config.h"
 #include "EmbUI.h"
+
+#ifdef PIO_FRAMEWORK_ARDUINO_MMU_CACHE16_IRAM48_SECHEAP_SHARED
+#include <umm_malloc/umm_malloc.h>
+#include <umm_malloc/umm_heap_select.h>
+#endif
+
+#include <SPIFFSEditor.h>
+
+#include "config.h"
 #include "lamp.h"
 #include "buttons.h"
+
+#ifdef TM1637_CLOCK
+  #include "tm.h"
+#endif
+
+#ifdef ENCODER
+  #include "enc.h"
+#endif
+
+#ifdef RTC
+  #include "rtc.h"
+#endif
+
+#ifdef USE_STREAMING
+  #include "ledStream.h"
+#endif
 
 // TaskScheduler
 extern Scheduler ts;
@@ -68,13 +92,16 @@ extern MP3PLAYERDEVICE *mp3;
 #ifdef ENCODER
 #include "enc.h"
 #endif
-
+#ifdef EMBUI_USE_MQTT
 void mqttCallback(const String &topic, const String &payload);
+void mqttConnect();
 void sendData();
+#endif
 
 void create_parameters();
 void sync_parameters();
-void event_worker(const EVENT *);
+void event_worker(DEV_EVENT *);
 bool notfound_handle(AsyncWebServerRequest *request, const String& req); // кастомный обработчик, для поддержки приложения WLED APP ( https://play.google.com/store/apps/details?id=com.aircoookie.WLED )
+bool ws_action_handle(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
 
 #endif
